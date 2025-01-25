@@ -2,7 +2,7 @@ package client;
 
 import com.beust.jcommander.Parameter;
 
-public class ParametersClient {
+final public class ParametersClient {
     @Parameter(names = "-in", description = "Text Request", required = false)
     private String textRequest = "";
 

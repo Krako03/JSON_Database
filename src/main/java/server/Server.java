@@ -14,25 +14,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Server {
+final public class Server {
     private final String address;
-    private final int port;
-    private final int THREAD_POOL_SIZE = 10;
+    private static final int THREAD_POOL_SIZE = 10;
     private boolean active;
-    private final String uri = System.getProperty("user.dir") + "/src/server/data/db.json";
-    private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    private final String uri = System.getProperty("user.dir")
+            + "/src/main/java/server/data/db.json";
+    private final ExecutorService executorService =
+            Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public Server() {
-        this.address = "127.0.0.1";
-        this.port = 23456;
+        this.address = "localhost";
         this.active = true;
     }
 
-    public void receiveConnections(){
-        try (ServerSocket server = new ServerSocket(port, 50, InetAddress.getByName(address))) {
-            server.setSoTimeout(1000);
+    public void receiveConnections() {
+        int port = 23456;
+        int timeOut = 1000;
+        int backlog = 50;
+        try (ServerSocket server =
+                     new ServerSocket(port, backlog,
+                             InetAddress.getByName(address))) {
+            server.setSoTimeout(timeOut);
             System.out.println("Server started!");
             while (active) {
                 try {
@@ -52,13 +57,15 @@ public class Server {
         }
     }
 
-    private void receiveInput(Socket socket){
-        try (DataInputStream input = new DataInputStream(socket.getInputStream());
-             DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
+    private void receiveInput(final Socket socket) {
+        try (DataInputStream input =
+                     new DataInputStream(socket.getInputStream());
+             DataOutputStream output =
+                     new DataOutputStream(socket.getOutputStream())) {
             String command = input.readUTF();
             System.out.println("Received: " + command);
 
-            JsonNode requestJson = objectMapper.readTree(command);
+            JsonNode requestJson = OBJECT_MAPPER.readTree(command);
 
             String response;
 
@@ -73,18 +80,18 @@ public class Server {
             System.out.println("Sent: " + response);
             output.writeUTF(response);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
             System.out.println("Something went wrong with the connection!");
         } finally {
             try {
                 socket.close();
             } catch (IOException e) {
-                System.err.println("Failed to close client socket: " + e.getMessage());
+                System.err.println("Failed to close client socket: "
+                        + e.getMessage());
             }
         }
     }
 
-    private String setValue(JsonNode jsonNode){
+    private String setValue(final JsonNode jsonNode) {
         Response response;
         lock.writeLock().lock();
         JsonNode key = jsonNode.get("key");
@@ -93,15 +100,18 @@ public class Server {
         try {
             File file = new File(uri);
 
-            ObjectNode root = file.exists() ?
-                    (ObjectNode) objectMapper.readTree(file) : objectMapper.createObjectNode();
+            ObjectNode root = file.exists()
+                    ? (ObjectNode) OBJECT_MAPPER.readTree(file)
+                    : OBJECT_MAPPER.createObjectNode();
 
             traverseJsonSet(root, key, value);
 
 //            objectMapper.writer().writeValue(file, root);
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, root);
+            OBJECT_MAPPER.writerWithDefaultPrettyPrinter()
+                    .writeValue(file, root);
             response = new Response("OK");
         } catch (IOException e) {
+            System.out.println(e.getMessage());
             response = new Response("ERROR");
         } finally {
             lock.writeLock().unlock();
@@ -109,7 +119,7 @@ public class Server {
         return new Gson().toJson(response);
     }
 
-    private String getValue(JsonNode jsonNode){
+    private String getValue(final JsonNode jsonNode) {
         Response response;
         lock.readLock().lock();
         label: try {
@@ -119,7 +129,7 @@ public class Server {
                 break label;
             }
 
-            ObjectNode root = (ObjectNode) objectMapper.readTree(file);
+            ObjectNode root = (ObjectNode) OBJECT_MAPPER.readTree(file);
             JsonNode value = traverseJsonGet(root, jsonNode.get("key"));
 
             if (value == null) {
@@ -129,7 +139,8 @@ public class Server {
                     response = new Response("OK", value.textValue());
                 } else {
                     response = new Response("OK", value.toString());
-                    StringBuilder val = new StringBuilder(new Gson().toJson(response));
+                    StringBuilder val =
+                            new StringBuilder(new Gson().toJson(response));
                     int index = val.indexOf("value\"");
                     val.deleteCharAt(index + 7);
                     index = val.length();
@@ -145,7 +156,7 @@ public class Server {
         return new Gson().toJson(response); //.replace("\\", "");
     }
 
-    private String delete(JsonNode jsonNode){
+    private String delete(final JsonNode jsonNode) {
         Response response;
         lock.writeLock().lock();
         JsonNode key = jsonNode.get("key");
@@ -156,14 +167,16 @@ public class Server {
                 break label;
             }
 
-            ObjectNode root = file.exists() ?
-                    (ObjectNode) objectMapper.readTree(file) : objectMapper.createObjectNode();
+            ObjectNode root = file.exists()
+                    ? (ObjectNode) OBJECT_MAPPER.readTree(file)
+                    : OBJECT_MAPPER.createObjectNode();
 
             boolean flag = traverseJsonDelete(root, key);
 
             if (flag) {
                 //            objectMapper.writer().writeValue(file, root);
-                objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, root);
+                OBJECT_MAPPER.writerWithDefaultPrettyPrinter()
+                        .writeValue(file, root);
                 response = new Response("OK");
             } else {
                 response = new Response("ERROR", "No such key");
@@ -176,18 +189,19 @@ public class Server {
         return new Gson().toJson(response);
     }
 
-    private String exit(){
+    private String exit() {
         active = false;
         Response response = new Response("OK");
         return new Gson().toJson(response);
     }
 
-    private String error(){
+    private String error() {
         Response response = new Response("ERROR", "Wrong command");
         return new Gson().toJson(response);
     }
 
-    private JsonNode traverseJsonGet(JsonNode root, JsonNode keyNode) {
+    private JsonNode traverseJsonGet(final JsonNode root,
+                                     final JsonNode keyNode) {
         if (keyNode.isTextual()) {
             return root.get(keyNode.asText());
         }
@@ -205,7 +219,9 @@ public class Server {
         return null;
     }
 
-    private void traverseJsonSet(ObjectNode root, JsonNode keyNode, JsonNode valueNode) {
+    private void traverseJsonSet(final ObjectNode root,
+                                 final JsonNode keyNode,
+                                 final JsonNode valueNode) {
         if (keyNode.isTextual()) {
             root.set(keyNode.asText(), valueNode);
         } else if (keyNode.isArray()) {
@@ -223,19 +239,22 @@ public class Server {
                     if (currentNode instanceof ObjectNode objectNode) {
 
                         if (!objectNode.has(currentKey)) {
-                            objectNode.set(currentKey, objectMapper.createObjectNode());
+                            objectNode.set(currentKey,
+                                    OBJECT_MAPPER.createObjectNode());
                         }
 
                         currentNode = objectNode.get(currentKey);
                     } else {
-                        throw new IllegalStateException("Path traversal failed, invalid structure.");
+                        throw new IllegalStateException(
+                                "Path traversal failed, invalid structure.");
                     }
                 }
             }
         }
     }
 
-    private boolean traverseJsonDelete(ObjectNode root, JsonNode keyNode) {
+    private boolean traverseJsonDelete(final ObjectNode root,
+                                       final JsonNode keyNode) {
         boolean flag = false;
         if (keyNode.isTextual() && root.has(keyNode.asText())) {
             root.remove(keyNode.asText());
@@ -248,7 +267,8 @@ public class Server {
                 String currentKey = keyArray.get(i).asText();
 
                 if (i == keyArray.size() - 1) {
-                    if (currentNode instanceof ObjectNode && currentNode.has(currentKey)) {
+                    if (currentNode instanceof ObjectNode
+                            && currentNode.has(currentKey)) {
                         ((ObjectNode) currentNode).remove(currentKey);
                         flag = true;
                     }
@@ -258,7 +278,8 @@ public class Server {
                             currentNode = objectNode.get(currentKey);
                         }
                     } else {
-                        throw new IllegalStateException("Path traversal failed, invalid structure.");
+                        throw new IllegalStateException(
+                                "Path traversal failed, invalid structure.");
                     }
                 }
             }

@@ -11,19 +11,18 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class Client {
+final public class Client {
     private final String address;
-    private final int port;
     private final String[] args;
-    private final String uri = System.getProperty("user.dir") + "/src/client/data/";
+    private final String uri =
+            System.getProperty("user.dir") + "/src/main/java/client/data/";
     private String type;
     private String key;
     private String value;
     private String text;
 
-    public Client(String[] args) {
-        this.address = "127.0.0.1";
-        this.port = 23456;
+    public Client(final String[] args) {
+        this.address = "localhost";
         this.args = args;
         this.type = "";
         this.key = "";
@@ -31,11 +30,15 @@ public class Client {
         this.text = "";
     }
 
-    public void getConnection(){
+    public void getConnection() {
         try {
-            Socket socket = new Socket(InetAddress.getByName(address), port);
-            DataInputStream input = new DataInputStream(socket.getInputStream());
-            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+            int port = 23456;
+            Socket socket =
+                    new Socket(InetAddress.getByName(address), port);
+            DataInputStream input =
+                    new DataInputStream(socket.getInputStream());
+            DataOutputStream output =
+                    new DataOutputStream(socket.getOutputStream());
             getCommand();
             sendInput(socket, input, output);
         } catch (UnknownHostException e) {
@@ -47,7 +50,9 @@ public class Client {
         }
     }
 
-    private void sendInput(Socket socket, DataInputStream input, DataOutputStream output){
+    private void sendInput(
+            final Socket socket, final DataInputStream input,
+            final DataOutputStream output) {
         System.out.println("Client started!");
         try {
             String command = getJson();
@@ -90,7 +95,7 @@ public class Client {
         return gson;
     }
 
-    private void getCommand(){
+    private void getCommand() {
         ParametersClient parameters = new ParametersClient();
         JCommander jCommander = JCommander.newBuilder()
                 .addObject(parameters)
@@ -107,7 +112,7 @@ public class Client {
         }
     }
 
-    private String readFromData(){
+    private String readFromData() {
         try {
             File file = new File(uri + text);
             if (!file.exists()) {

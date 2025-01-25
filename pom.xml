@@ -12,6 +12,12 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <pmdVersion>7.9.0</pmdVersion>
+        <junit-platform.version>5.3.1</junit-platform.version>
+        <spotbugs.version>4.8.6.6</spotbugs.version>
+        <pmd.version>3.18.0</pmd.version>
+        <checkstyle.version>3.3.0</checkstyle.version>
+        <junit-platform.version>5.3.1</junit-platform.version>
     </properties>
 
     <dependencies>
@@ -36,5 +42,122 @@
             <version>2.18.2</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Checkstyle Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.version}</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation> <!-- Use your custom config file if needed -->
+                </configuration>
+            </plugin>
+
+            <!-- SpotBugs Plugin -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs</artifactId>
+                        <version>4.8.6</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- PMD Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${pmd.version}</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>pmd</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rulesets>
+                        <!-- A rule set, that comes bundled with PMD -->
+                        <ruleset>/category/java/bestpractices.xml</ruleset>
+                        <!--                        <ruleset>/category/java/errorprone.xml</ruleset>-->
+                        <!--                        <ruleset>/category/java/codestyle.xml</ruleset>-->
+                    </rulesets>
+                    <targetJdk>17</targetJdk>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Site Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.12.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jxr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <reporting>
+        <plugins>
+            <!-- PMD Report -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${pmd.version}</version>
+            </plugin>
+
+            <!-- SpotBugs Report -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.version}</version>
+            </plugin>
+
+            <!-- Checkstyle Report -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.8.0</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>

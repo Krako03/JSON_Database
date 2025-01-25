@@ -5,11 +5,11 @@ public class Response {
     private String value;
     private String reason;
 
-    public Response(String response){
+    public Response(final String response) {
         this.response = response;
     }
 
-    public Response(String response, String second){
+    public Response(final String response, final String second) {
         this.response = response;
         if (response.equals("OK")) {
             this.value = second;
