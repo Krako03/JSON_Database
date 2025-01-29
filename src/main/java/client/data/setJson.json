@@ -1,0 +1,11 @@
+{
+  "type": "set",
+  "key": "person",
+  "value": {
+    "name": "ying",
+    "car": {
+      "model": "versa",
+      "year": "1999"
+    }
+  }
+}

@@ -50,7 +50,7 @@ final public class Client {
         }
     }
 
-    private void sendInput(
+    void sendInput(
             final Socket socket, final DataInputStream input,
             final DataOutputStream output) {
         System.out.println("Client started!");
@@ -95,7 +95,7 @@ final public class Client {
         return gson;
     }
 
-    private void getCommand() {
+    void getCommand() {
         ParametersClient parameters = new ParametersClient();
         JCommander jCommander = JCommander.newBuilder()
                 .addObject(parameters)
@@ -124,5 +124,9 @@ final public class Client {
             System.out.println("Other error");
             return "error";
         }
+    }
+
+    public String[] getArgs() {
+        return args;
     }
 }
